@@ -1,0 +1,7 @@
+fastapi==0.110.0
+pydantic==2.6.4
+uvicorn==0.29.0
+pytest==8.1.1
+sqlalchemy==2.0.29
+asyncpg==0.29.0
+aio-pika==9.4.1
