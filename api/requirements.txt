@@ -5,3 +5,6 @@ pytest==8.1.1
 sqlalchemy==2.0.29
 asyncpg==0.29.0
 aio-pika==9.4.1
+slowapi==0.1.9
+PyJWT[crypto]>=2.8.0
+upstash-qstash==1.2.0

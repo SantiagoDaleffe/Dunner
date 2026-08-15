@@ -1,49 +1,25 @@
-version: '3.8'
-
 services:
   api:
     build:
-      context: ./api
+      context: ../api
       dockerfile: Dockerfile
+
     env_file: .env
+    environment:
+      - PYTHONPATH=/app
     ports:
       - "8000:8000"
-    depends_on:
-      - db
-      - rabbitmq
     volumes:
-      - ./api:/app
-      - ./core:/app/core
+      - ../api:/app/api
+      - ../core:/app/core
 
   worker:
     build:
-      context: ./worker
+      context: ../worker
       dockerfile: Dockerfile
     env_file: .env
-    depends_on:
-      - db
-      - rabbitmq
+    environment:
+      - PYTHONPATH=/app
     volumes:
-      - ./worker:/app
-      - ./core:/app/core
-
-  db:
-    image: postgres:15-alpine
-    env_file: .env
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    env_file: .env
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-
-volumes:
-  postgres_data:
-  rabbitmq_data:
+      - ../worker:/app/worker
+      - ../core:/app/core

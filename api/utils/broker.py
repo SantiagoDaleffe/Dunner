@@ -8,7 +8,7 @@ RABBITMQ_URL = os.environ["RABBITMQ_URL"]
 EXCHANGE_NAME = os.environ["RABBITMQ_EXCHANGE_NAME"]
 
 
-class RabbitMQClient:
+class RabbitMQBroker:
     """Client wrapper for publishing events to RabbitMQ."""
 
     def __init__(self):
@@ -59,7 +59,7 @@ class RabbitMQClient:
             await self.connection.close()
 
 
-rabbitmq_client = RabbitMQClient()
+rabbitmq_client = RabbitMQBroker()
 
 
 async def get_broker():

@@ -1,39 +1,50 @@
-from fastapi import FastAPI, Request
+from contextlib import asynccontextmanager
+from core import engine
+from api.utils.database import engine as db_engine
+from fastapi import FastAPI, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from api.utils.middlewares import LimitUploadSize
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from api.utils.security import verify_api_key, verify_jwt, verify_webhook_signature, verify_api_key, limiter
 from api.utils.logger import logger, trace_id_var
 import uuid
 import time
-from api.routers import config, ingest
+from api.routers import config, ingest, retry
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from api.utils.broker import rabbitmq_client
+from api.utils.models import Base
 
-app = FastAPI(title="Smart Dunning API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with db_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables synchronized.")
+    
+    yield
+    
+    await rabbitmq_client.close()
+    logger.info("Connections closed.")
 
+app = FastAPI(title="Smart Dunning API", version="1.0.0", lifespan=lifespan)
 
 @app.middleware("http")
-async def trace_middleware(request: Request, call_next):
-    """Middleware that traces HTTP requests and responses.
-
-    Args:
-        request (Request): The incoming HTTP request.
-        call_next (Callable): The next middleware or route handler.
-
-    Returns:
-        Response: The HTTP response with trace ID header.
-    """
+async def inject_trace_id(request: Request, call_next):
     trace_id = str(uuid.uuid4())
     trace_id_var.set(trace_id)
-
-    start_time = time.time()
-    logger.info(f"Incoming request: {request.method} {request.url.path}")
     response = await call_next(request)
-
-    process_time = (time.time() - start_time) * 1000
-    logger.info(
-        f"Finalized request: {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.2f}ms"
-    )
-
     response.headers["X-Trace-ID"] = trace_id
     return response
+
+app.include_router(config.router, dependencies=[Depends(verify_jwt)])
+app.include_router(ingest.router, dependencies=[Depends(verify_api_key), Depends(verify_webhook_signature)])
+app.include_router(retry.router, prefix="/webhook")
+app.add_middleware(LimitUploadSize)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -54,6 +65,3 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             ],
         },
     )
-
-app.include_router(config.router)
-app.include_router(ingest.router)
