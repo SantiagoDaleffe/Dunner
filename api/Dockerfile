@@ -2,13 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+# Como construimos desde la raíz, especificamos la ruta del requirements
+COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . ./api
-COPY core /app/core
-COPY api /app/api
+# Copiamos las carpetas exactas
+COPY core ./core
+COPY api ./api
+
 EXPOSE 8000
 
-# Cambiamos main:app por api.main:app
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0", "--port", "8000", "--reload"]
+# IP corregida a 0.0.0.0 y sin --reload
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

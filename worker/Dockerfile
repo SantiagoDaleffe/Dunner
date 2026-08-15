@@ -2,11 +2,10 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY worker/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . ./worker
-COPY core /app/core
-COPY worker /app/worker
+COPY core ./core
+COPY worker ./worker
 
 CMD ["python", "worker/main.py"]
