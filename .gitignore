@@ -52,3 +52,7 @@ logs/
 *.tmp
 *.bak
 *.orig
+*.tfvars
+.terraform/
+*.tfstate
+*.tfstate.*
