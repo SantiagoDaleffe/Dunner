@@ -44,7 +44,10 @@ async def ingest_webhook(
             "trace_id": trace_id_var.get(),
             "note": "Already processed",
         }
-
+    import os
+    logger.info(f"VARIABLES CARGADAS: {list(os.environ.keys())}")
+        
+    api_url = os.environ["PUBLIC_API_URL"]
     logger.info(f"Event {payload.event_id} accepted. Sending to QStash queue.")
 
     qstash_token = os.environ["QSTASH_TOKEN"]
