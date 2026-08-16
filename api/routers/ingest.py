@@ -49,7 +49,7 @@ async def ingest_webhook(
     logger.info(f"Event {payload.event_id} accepted. Sending to QStash queue.")
 
     qstash_token = os.environ["QSTASH_TOKEN"]
-    api_url = os.environ["PUBLIC_API_URL"].replace("https://", "").replace("http://", "")
+    api_url = os.environ["PUBLIC_API_URL"]
     trace_id = trace_id_var.get()
 
     async with httpx.AsyncClient() as client:

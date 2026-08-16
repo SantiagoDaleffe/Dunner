@@ -126,7 +126,7 @@ async def process_event(request: Request, db: AsyncSession = Depends(get_db)):
                 )
 
             qstash_token = os.environ["QSTASH_TOKEN"]
-            api_url = os.environ["PUBLIC_API_URL"].replace("https://", "").replace("http://", "")
+            api_url = os.environ["PUBLIC_API_URL"]
             unix_timestamp = str(int(decision.scheduled_for.timestamp()))
 
             async with httpx.AsyncClient() as client:
