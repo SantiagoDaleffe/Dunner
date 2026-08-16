@@ -131,7 +131,7 @@ async def process_event(request: Request, db: AsyncSession = Depends(get_db)):
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    f"https://qstash.upstash.io/v2/publish/{api_url}/webhook/execute-retry",
+                    f"https://us-east-1.qstash.upstash.io/v2/publish/{api_url}/webhook/execute-retry",
                     headers={
                         "Authorization": f"Bearer {qstash_token}",
                         "Content-Type": "application/json",
