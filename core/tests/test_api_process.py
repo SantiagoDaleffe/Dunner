@@ -17,6 +17,9 @@ from contextlib import asynccontextmanager
 @patch("api.routers.process.qstash_receiver")
 @patch("api.routers.process.httpx.AsyncClient")
 async def test_process_event_success(mock_httpx_client, mock_receiver):
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_httpx_client.return_value.__aenter__.return_value.post.return_value = mock_response
     # Mocking DB and Request
     mock_db = AsyncMock()
     

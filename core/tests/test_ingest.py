@@ -35,6 +35,9 @@ client = TestClient(app)
 @patch.dict(os.environ, {"QSTASH_TOKEN": "mock", "PUBLIC_API_URL": "http://mock"})
 def test_ingest_valid_payload(mock_httpx_client):
     """Verify that a valid webhook payload is accepted and QStash is called."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_httpx_client.return_value.__aenter__.return_value.post.return_value = mock_response
     valid_payload = {
         "event_id": f"evt_{uuid.uuid4()}",
         "tenant_id": "org_12345",
