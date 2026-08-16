@@ -126,20 +126,22 @@ async def process_event(request: Request, db: AsyncSession = Depends(get_db)):
                 )
 
             qstash_token = os.environ["QSTASH_TOKEN"]
-            api_url = os.environ["PUBLIC_API_URL"]
+            api_url = os.environ["PUBLIC_API_URL"].replace("https://", "").replace("http://", "")
             unix_timestamp = str(int(decision.scheduled_for.timestamp()))
 
             async with httpx.AsyncClient() as client:
-                await client.post(
+                response = await client.post(
                     f"https://qstash.upstash.io/v2/publish/{api_url}/webhook/execute-retry",
                     headers={
                         "Authorization": f"Bearer {qstash_token}",
                         "Content-Type": "application/json",
                         "Upstash-Not-Before": unix_timestamp,
-                        "Upstash-Trace-Id": trace_id,
+                        "Upstash-Trace-Id": trace_id
                     },
-                    json={"event_id": event_id, "tenant_id": payment_event.tenant_id},
+                    json={"event_id": event_id, "tenant_id": payment_event.tenant_id}
                 )
+                if response.status_code >= 400:
+                    logger.error(f"[Trace: {trace_id}] QStash API Error: {response.text}")
 
     except Exception as e:
         logger.error(f"[Trace: {trace_id}] Error processing: {e}")

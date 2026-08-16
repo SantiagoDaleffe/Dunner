@@ -44,18 +44,16 @@ async def ingest_webhook(
             "trace_id": trace_id_var.get(),
             "note": "Already processed",
         }
-    import os
-    logger.info(f"VARIABLES CARGADAS: {list(os.environ.keys())}")
         
     api_url = os.environ["PUBLIC_API_URL"]
     logger.info(f"Event {payload.event_id} accepted. Sending to QStash queue.")
 
     qstash_token = os.environ["QSTASH_TOKEN"]
-    api_url = os.environ["PUBLIC_API_URL"]
+    api_url = os.environ["PUBLIC_API_URL"].replace("https://", "").replace("http://", "")
     trace_id = trace_id_var.get()
 
     async with httpx.AsyncClient() as client:
-        await client.post(
+        response = await client.post(
             f"https://qstash.upstash.io/v2/publish/{api_url}/webhook/process",
             headers={
                 "Authorization": f"Bearer {qstash_token}",
@@ -64,4 +62,7 @@ async def ingest_webhook(
             },
             json=payload.model_dump(mode="json"),
         )
+        if response.status_code >= 400:
+            logger.error(f"[Trace: {trace_id}] QStash API Error: {response.text}")
+
     return {"status": "accepted", "trace_id": trace_id}

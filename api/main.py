@@ -17,7 +17,8 @@ from api.routers import config, ingest, retry, process
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from api.utils.models import Base
-
+import logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
