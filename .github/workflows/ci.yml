@@ -36,5 +36,6 @@ jobs:
         QSTASH_CURRENT_SIGNING_KEY: mock_curr
         QSTASH_NEXT_SIGNING_KEY: mock_next
         PUBLIC_API_URL: https://mock.railway.app
+        STRIPE_SECRET_KEY: sk_test_mock
       run: |
         PYTHONPATH=. python -m pytest core/tests/ -v
