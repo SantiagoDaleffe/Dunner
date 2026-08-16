@@ -9,9 +9,6 @@ resource "railway_service" "dunner_api" {
   project_id      = railway_project.dunner_project.id
   name            = "dunner-api"
   source_repo     = var.github_repo
-  builder         = "DOCKERFILE"
-  dockerfile_path = "api/Dockerfile"
-  watch_patterns  = ["/api/**", "/core/**"]
 }
 
 # 3. Inject environment variables
