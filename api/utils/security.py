@@ -10,8 +10,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-WEBHOOK_SECRET = os.environ.get("WEBHOOK_SECRET")
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 
 jwks_url = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 jwks_client = PyJWKClient(jwks_url)
@@ -23,7 +23,18 @@ limiter = Limiter(key_func=get_remote_address)
 async def verify_jwt(
     credentials: HTTPAuthorizationCredentials = Security(security_bearer),
 ):
-    """Validates Supabase asymmetric token using its public keys."""
+    """Validate a bearer JWT issued by Supabase and return its payload.
+
+    Args:
+        credentials: The bearer token credentials provided in the Authorization header.
+
+    Raises:
+        HTTPException: If the token is missing, malformed, expired, or cannot be validated.
+        HTTPException: If the token payload does not include a subject claim.
+
+    Returns:
+        dict: The decoded JWT payload for the authenticated user.
+    """
     token = credentials.credentials
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
@@ -49,12 +60,23 @@ async def verify_jwt(
             detail=f"Invalid or expired credentials: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=401, detail="Error validating token.")
 
 
 async def verify_webhook_signature(request: Request):
-    """Valida que el webhook venga realmente de la pasarela de pagos."""
+    """Validate the Stripe webhook signature for the incoming request payload.
+
+    Args:
+        request: The incoming FastAPI request containing the Stripe-Signature header and raw body.
+
+    Raises:
+        HTTPException: If the Stripe-Signature header is absent.
+        HTTPException: If the signature does not match the raw request body.
+
+    Returns:
+        bool: True when the webhook signature is valid.
+    """
     signature_header = request.headers.get("Stripe-Signature")
 
     if not signature_header:
@@ -73,13 +95,23 @@ async def verify_webhook_signature(request: Request):
 
 
 API_KEY_NAME = "X-API-Key"
-MASTER_API_KEY = os.getenv("API_KEY")
+MASTER_API_KEY = os.environ["API_KEY"]
 
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
-    """Valida que la petición incluya la API Key correcta en los headers."""
+    """Validate the master API key sent in the configured custom header.
+
+    Args:
+        api_key: API key value received from the X-API-Key header.
+
+    Raises:
+        HTTPException: If the provided API key does not match the configured master key.
+
+    Returns:
+        str: The validated API key when authorization succeeds.
+    """
     if api_key == MASTER_API_KEY:
         return api_key
 

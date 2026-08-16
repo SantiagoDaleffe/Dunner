@@ -1,33 +1,47 @@
 from contextlib import asynccontextmanager
-from core import engine
 from api.utils.database import engine as db_engine
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from api.utils.middlewares import LimitUploadSize
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from api.utils.security import verify_api_key, verify_jwt, verify_webhook_signature, verify_api_key, limiter
+from api.utils.security import (
+    verify_api_key,
+    verify_jwt,
+    verify_webhook_signature,
+    limiter,
+)
 from api.utils.logger import logger, trace_id_var
 import uuid
-import time
-from api.routers import config, ingest, retry
+from api.routers import config, ingest, retry, process
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from api.utils.broker import rabbitmq_client
 from api.utils.models import Base
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Initialize application state during startup and teardown.
+
+    This function runs when the FastAPI app starts, creates the database
+    tables if they do not already exist, and logs the initialization.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+    """
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables synchronized.")
-    
+    logger.info("Database initialized.")
     yield
-    
-    await rabbitmq_client.close()
-    logger.info("Connections closed.")
 
-app = FastAPI(title="Smart Dunning API", version="1.0.0", lifespan=lifespan)
+
+app = FastAPI(
+    title="Aegis Recovery Gateway",
+    description="Core Serverless Engine for automated payment retries",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
 
 @app.middleware("http")
 async def inject_trace_id(request: Request, call_next):
@@ -37,19 +51,42 @@ async def inject_trace_id(request: Request, call_next):
     response.headers["X-Trace-ID"] = trace_id
     return response
 
+
 app.include_router(config.router, dependencies=[Depends(verify_jwt)])
-app.include_router(ingest.router, dependencies=[Depends(verify_api_key), Depends(verify_webhook_signature)])
+app.include_router(
+    ingest.router,
+    prefix="/webhook",
+    dependencies=[Depends(verify_api_key), Depends(verify_webhook_signature)],
+)
+
+app.include_router(process.router, prefix="/webhook")
 app.include_router(retry.router, prefix="/webhook")
+
 app.add_middleware(LimitUploadSize)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.error(f"Payload validation rejected: {exc.errors()}")
+    """Handle invalid request payloads and return a structured 422 response.
 
+    Args:
+        request (Request): The incoming HTTP request that failed validation.
+        exc (RequestValidationError): The validation error raised by FastAPI.
+
+    Returns:
+        JSONResponse: A 422 JSON response containing the error code, a user-facing
+        message, the request trace ID, and detailed validation issues per field.
+    """
+    logger.error(f"Payload validation rejected: {exc.errors()}")
     return JSONResponse(
         status_code=422,
         content={

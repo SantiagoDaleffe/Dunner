@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from api.utils.schemas import TenantConfigPayload
 from api.utils.models import TenantConfig
-from api.utils.database import get_db
+from api.utils.dependencies import get_db
 from api.utils.logger import logger, trace_id_var
 
 router = APIRouter(prefix="/config", tags=["Configuration"])

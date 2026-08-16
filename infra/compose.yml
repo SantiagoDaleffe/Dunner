@@ -1,25 +1,11 @@
 services:
   api:
     build:
-      context: ../api
-      dockerfile: Dockerfile
-
+      context: ..
+      dockerfile: api/Dockerfile
     env_file: .env
-    environment:
-      - PYTHONPATH=/app
     ports:
       - "8000:8000"
     volumes:
       - ../api:/app/api
-      - ../core:/app/core
-
-  worker:
-    build:
-      context: ../worker
-      dockerfile: Dockerfile
-    env_file: .env
-    environment:
-      - PYTHONPATH=/app
-    volumes:
-      - ../worker:/app/worker
       - ../core:/app/core

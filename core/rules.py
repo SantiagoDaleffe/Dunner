@@ -95,14 +95,6 @@ class HighValueAlertRule:
                 reason=f"High-value payment failed ({event.amount} {event.currency}). Requires manual intervention."
             )
         return None
-    
-class WeekendSkipRule:
-    def evaluate(self, event: PaymentEvent) -> Optional[DunningAction]:
-        # Esta regla actúa modificando o evaluando la fecha calculada previamente.
-        # Si el reintento cae domingo (weekday() == 6), lo patea al lunes.
-        # (Se suele aplicar después del cálculo exponencial).
-        return None  # La dejamos lista para integrar en el flujo del engine si se requiere.
-
 
 class ExponentialBackoffRule:
     """Rule that schedules retries using exponential backoff.
