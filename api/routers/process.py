@@ -19,7 +19,6 @@ qstash_receiver = Receiver(
     next_signing_key=os.environ["QSTASH_NEXT_SIGNING_KEY"],
 )
 
-
 @router.post("/process", status_code=200)
 async def process_event(request: Request, db: AsyncSession = Depends(get_db)):
     """Process incoming payment failure events from QStash.

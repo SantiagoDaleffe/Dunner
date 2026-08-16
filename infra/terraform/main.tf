@@ -13,7 +13,6 @@ resource "railway_service" "dunner_api" {
 
 # 3. Inject environment variables
 resource "railway_variable" "db_url" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "DATABASE_URL"
@@ -21,7 +20,6 @@ resource "railway_variable" "db_url" {
 }
 
 resource "railway_variable" "qstash_token" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "QSTASH_TOKEN"
@@ -29,7 +27,6 @@ resource "railway_variable" "qstash_token" {
 }
 
 resource "railway_variable" "qstash_curr_key" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "QSTASH_CURRENT_SIGNING_KEY"
@@ -37,7 +34,6 @@ resource "railway_variable" "qstash_curr_key" {
 }
 
 resource "railway_variable" "qstash_next_key" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "QSTASH_NEXT_SIGNING_KEY"
@@ -45,7 +41,6 @@ resource "railway_variable" "qstash_next_key" {
 }
 
 resource "railway_variable" "qstash_url" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "QSTASH_URL"
@@ -54,7 +49,6 @@ resource "railway_variable" "qstash_url" {
 
 # Public URL for the service
 resource "railway_variable" "public_api_url" {
-  project_id     = railway_project.dunner_project.id
   service_id     = railway_service.dunner_api.id
   environment_id = railway_project.dunner_project.default_environment.id
   name           = "PUBLIC_API_URL"
