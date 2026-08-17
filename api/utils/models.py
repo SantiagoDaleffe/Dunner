@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import uuid
-from sqlalchemy import String, Boolean, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, JSON, Uuid
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -28,7 +28,9 @@ class TenantConfig(Base):
     tenant_id: Mapped[str] = mapped_column(String, primary_key=True, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    dunning_rules: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    dunning_rules: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False
+    )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -53,19 +55,16 @@ class ScheduledRetry(Base):
     __tablename__ = "scheduled_retries"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+        Uuid, primary_key=True, default=uuid.uuid4)
     tenant_id: Mapped[str] = mapped_column(
-        String, ForeignKey("tenant_configs.tenant_id"), index=True
-    )
+        String, ForeignKey("tenant_configs.tenant_id"), index=True)
     event_id: Mapped[str] = mapped_column(String, unique=True, index=True)
 
     execute_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-
-    payment_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
-
+    payment_data: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False
+    )
     status: Mapped[str] = mapped_column(String, default="PENDING", index=True)
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
