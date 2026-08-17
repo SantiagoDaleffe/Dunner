@@ -31,7 +31,8 @@ jobs:
         cd infra
         cp .env.example .env
         docker compose up -d
-        timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8000/health)" != "200" ]]; do sleep 1; done' || false
+        sleep 5
+        curl --retry 5 --retry-delay 2 --retry-all-errors --fail -s http://localhost:8000/health
         echo "API Healthy"
         
     - name: Run Tests
