@@ -54,3 +54,10 @@ resource "railway_variable" "public_api_url" {
   name           = "PUBLIC_API_URL"
   value          = "https://${railway_service.dunner_api.name}-production.up.railway.app" 
 }
+
+resource "railway_variable" "stripe_key" {
+  service_id     = railway_service.dunner_api.id
+  environment_id = railway_project.dunner_project.default_environment.id
+  name           = "STRIPE_SECRET_KEY"
+  value          = var.stripe_secret_key
+}

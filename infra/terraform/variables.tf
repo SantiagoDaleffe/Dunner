@@ -50,3 +50,8 @@ variable "github_repo" {
   description = "Your GitHub user and repo"
   type        = string
 }
+
+variable "stripe_secret_key" {
+  type        = string
+  sensitive   = true
+}
