@@ -86,9 +86,10 @@ async def stripe_webhook_adapter(request: Request):
 
     if event["type"] in ["invoice.payment_failed", "payment_intent.payment_failed"]:
         obj = event["data"]["object"]
-        
-        customer_id = obj.get("customer")
-        amount = obj.get("amount_due", obj.get("amount", 0)) / 100.0
+
+        customer_id = getattr(obj, "customer", None)
+        amount_due = getattr(obj, "amount_due", getattr(obj, "amount", 0))
+        amount = float(amount_due) / 100.0 if amount_due else 0.0
         
         dunning_payload = {
             "event_id": f"evt_strp_{event['id']}",
@@ -96,10 +97,10 @@ async def stripe_webhook_adapter(request: Request):
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "customer_id": customer_id or "cus_V5NPywL4pItSVc",
-                "payment_method_id": "pm_1U5Cf5AyrAR3v1XKLssw8QZy",
-                "invoice_id": obj.get("id", "inv_desc"),
+                "payment_method_id": "pm_1U5Cf5AyrAR3v1XKLssw8QZy", 
+                "invoice_id": getattr(obj, "id", "inv_desc"),
                 "amount": amount if amount > 0 else 15.50,
-                "currency": obj.get("currency", "usd"),
+                "currency": getattr(obj, "currency", "usd"),
                 "error_code": "stripe_declined",
                 "attempt_count": 1
             }
