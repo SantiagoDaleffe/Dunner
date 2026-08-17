@@ -28,6 +28,8 @@ jobs:
 
     - name: Health Check
       run: |
+        cd infra
+        cp .env.example .env
         docker compose up -d
         timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8000/health)" != "200" ]]; do sleep 1; done' || false
         echo "API Healthy"
