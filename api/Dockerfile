@@ -4,7 +4,6 @@ WORKDIR /app
 COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos las carpetas exactas
 COPY core ./core
 COPY api ./api
 
