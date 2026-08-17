@@ -52,14 +52,12 @@ async def inject_trace_id(request: Request, call_next):
     response.headers["X-Trace-ID"] = trace_id
     return response
 
+@app.get("/health", tags=['System'])
+async def health_check():
+    return {"status": "ok", "trace_id": trace_id_var.get()}
 
 app.include_router(config.router, dependencies=[Depends(verify_jwt)])
-app.include_router(
-    ingest.router,
-    prefix="/webhook"#,
-    #dependencies=[Depends(verify_api_key), Depends(verify_webhook_signature)],
-)
-
+app.include_router(ingest.router, prefix="/webhook")
 app.include_router(process.router, prefix="/webhook")
 app.include_router(retry.router, prefix="/webhook")
 

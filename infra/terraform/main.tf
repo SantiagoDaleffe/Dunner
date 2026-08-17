@@ -62,3 +62,10 @@ resource "railway_variable" "stripe_key" {
   name           = "STRIPE_SECRET_KEY"
   value          = var.stripe_secret_key
 }
+
+resource "railway_variable" "stripe_webhook_secret" {
+  service_id     = railway_service.dunner_api.id
+  environment_id = railway_project.dunner_project.default_environment.id
+  name           = "STRIPE_WEBHOOK_SECRET"
+  value          = var.stripe_webhook_secret
+}

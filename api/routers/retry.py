@@ -91,7 +91,8 @@ async def execute_retry(request: Request, db: AsyncSession = Depends(get_db)):
                 customer=customer_id,
                 payment_method=payment_method_id,
                 off_session=True,
-                confirm=True
+                confirm=True,
+                idempotency_key=event_id
             )
             logger.info(f"[Trace: {trace_id}] PaymentIntent created: {intent['id']} for event {event_id}")
             final_status = "SUCCESS"
