@@ -29,9 +29,21 @@ jobs:
     - name: Health Check
       run: |
         cd infra
-        cp .env.example .env
+        cat <<EOF > .env
+        DATABASE_URL=sqlite+aiosqlite:///:memory:
+        SUPABASE_URL=https://mock.supabase.co
+        WEBHOOK_SECRET=mock_whsec
+        API_KEY=mock_api_key
+        QSTASH_TOKEN=mock_token
+        QSTASH_CURRENT_SIGNING_KEY=mock_curr
+        QSTASH_NEXT_SIGNING_KEY=mock_next
+        PUBLIC_API_URL=https://mock.railway.app
+        STRIPE_SECRET_KEY=sk_test_mock
+        STRIPE_WEBHOOK_SECRET=whsec_mock
+        EOF
         docker compose up -d
         sleep 5
+        docker compose logs api
         curl --retry 5 --retry-delay 2 --retry-all-errors --fail -s http://localhost:8000/health
         echo "API Healthy"
         
