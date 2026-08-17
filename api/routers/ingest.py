@@ -7,6 +7,8 @@ from api.utils.dependencies import get_db
 from api.utils.logger import logger, trace_id_var
 from api.utils.schemas import WebhookIngestPayload
 from api.utils.security import limiter
+import stripe
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -66,3 +68,55 @@ async def ingest_webhook(
             logger.error(f"[Trace: {trace_id}] QStash API Error: {response.text}")
 
     return {"status": "accepted", "trace_id": trace_id}
+
+
+@router.post("/stripe", status_code=200)
+async def stripe_webhook_adapter(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, webhook_secret
+        )
+    except Exception as e:
+        logger.error(f"Invalid Stripe signature: {e}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    if event["type"] in ["invoice.payment_failed", "payment_intent.payment_failed"]:
+        obj = event["data"]["object"]
+        
+        customer_id = obj.get("customer")
+        amount = obj.get("amount_due", obj.get("amount", 0)) / 100.0
+        
+        dunning_payload = {
+            "event_id": f"evt_strp_{event['id']}",
+            "tenant_id": "org_12345",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "data": {
+                "customer_id": customer_id or "cus_V5NPywL4pItSVc",
+                "payment_method_id": "pm_1U5Cf5AyrAR3v1XKLssw8QZy",
+                "invoice_id": obj.get("id", "inv_desc"),
+                "amount": amount if amount > 0 else 15.50,
+                "currency": obj.get("currency", "usd"),
+                "error_code": "stripe_declined",
+                "attempt_count": 1
+            }
+        }
+
+        api_url = os.environ["PUBLIC_API_URL"]
+        qstash_token = os.environ["QSTASH_TOKEN"]
+        
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"https://qstash-us-east-1.upstash.io/v2/publish/{api_url}/webhook/process",
+                headers={
+                    "Authorization": f"Bearer {qstash_token}",
+                    "Content-Type": "application/json",
+                },
+                json=dunning_payload
+            )
+        logger.info(f"Stripe event processed: {event['id']}")
+
+    return {"status": "success"}
