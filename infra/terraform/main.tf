@@ -9,7 +9,6 @@ resource "railway_service" "egida_api" {
   project_id      = railway_project.egida_project.id
   name            = "egida-api"
   source_repo     = var.github_repo
-  serverless = true
 }
 
 # 3. Inject environment variables
