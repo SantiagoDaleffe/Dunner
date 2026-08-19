@@ -1,4 +1,4 @@
-# Aegis Recovery Gateway | Serverless Dunning Engine
+# Egida Recovery Gateway | Serverless Dunning Engine
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi)
@@ -8,7 +8,7 @@
 
 An enterprise-grade, event-driven *Dunning* (payment recovery) engine designed to automate and optimize failed payment retries for B2B SaaS platforms. 
 
-Traditional payment recovery relies on monolithic cron-jobs polling a database, which leads to scaling bottlenecks, database locks, and poor fault tolerance. **Aegis** solves this by decoupling the ingestion of payment failures from the execution of retries, using a serverless architecture powered by distributed message queues and dynamic, tenant-specific business rules.
+Traditional payment recovery relies on monolithic cron-jobs polling a database, which leads to scaling bottlenecks, database locks, and poor fault tolerance. **Egida** solves this by decoupling the ingestion of payment failures from the execution of retries, using a serverless architecture powered by distributed message queues and dynamic, tenant-specific business rules.
 
 ## High-Level Cloud & Tech Stack
 * **Core API:** FastAPI, Python 3.11, Pydantic, SQLAlchemy (Async)
@@ -29,11 +29,11 @@ In subscription-based businesses, involuntary churn (failed payments due to expi
 * **Hardcoded Logic:** Applying the same retry logic (e.g., "retry every 3 days") to all failures ignores the root cause. A "stolen card" should never be retried, while "insufficient funds" should wait for a payday.
 * **Tight Coupling:** If the payment gateway (Stripe) goes down during a cron execution, events are lost or require manual intervention.
 
-### The Aegis Event-Driven Approach
-Aegis treats every failed payment as an isolated, asynchronous event flowing through a state machine:
+### The Egida Event-Driven Approach
+Egida treats every failed payment as an isolated, asynchronous event flowing through a state machine:
 1. **Webhook Ingestion (`/webhook/stripe`):** Catches real-time failures directly from the payment processor. Validates the cryptographic signature and immediately returns a `202 Accepted` to prevent gateway timeouts.
 2. **Decoupled Processing (`/webhook/process`):** The payload is pushed to QStash. A worker consumes the event, evaluates the specific tenant's business rules, and decides the exact timestamp for the next retry.
-3. **Serverless Scheduling:** Instead of a cron-job, Aegis leverages QStash's `Not-Before` headers to freeze the event in the cloud for days or weeks.
+3. **Serverless Scheduling:** Instead of a cron-job, Egida leverages QStash's `Not-Before` headers to freeze the event in the cloud for days or weeks.
 4. **Execution (`/webhook/execute-retry`):** At the exact scheduled second, the engine awakens, executes the charge against Stripe, updates the database state, and either closes the loop or schedules the next attempt.
 
 ## 2. The Dunning Engine (Business Rules)
@@ -68,7 +68,7 @@ The platform is designed to be ephemeral and easily reproducible using **Terrafo
 
 ## 5. Known Limitations & Roadmap
 
-Transparency is key in enterprise software. The following areas represent the technical debt and future roadmap for Aegis:
+Transparency is key in enterprise software. The following areas represent the technical debt and future roadmap for Egida:
 
 * **Terraform Provider Constraints:** The community Railway Terraform provider currently struggles with the `sleepApplication` argument on Free/Hobby tiers due to recent API changes by Railway. Manual toggling via the Railway dashboard is temporarily required for zero-cost environments.
 * **Gateway Agnosticism:** Currently, the execution phase is tightly coupled to the `stripe` SDK. The roadmap includes an Adapter pattern to support Braintree, Adyen, and MercadoPago simultaneously.

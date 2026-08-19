@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Aegis Recovery Gateway",
+    title="Egida Recovery Gateway",
     description="Core Serverless Engine for automated payment retries",
     version="1.0.0",
     lifespan=lifespan,
