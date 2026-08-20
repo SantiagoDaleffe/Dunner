@@ -1,4 +1,4 @@
-name: Egida CI/CD Pipeline
+name: Egida CI/CD
 
 on:
   push:
