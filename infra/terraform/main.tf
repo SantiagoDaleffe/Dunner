@@ -97,3 +97,10 @@ resource "railway_variable" "stripe_webhook_secret" {
   name           = "STRIPE_WEBHOOK_SECRET"
   value          = var.stripe_webhook_secret
 }
+
+resource "railway_variable" "webhook_secret" {
+  service_id     = railway_service.egida_api.id
+  environment_id = railway_project.egida_project.default_environment.id
+  name           = "WEBHOOK_SECRET"
+  value          = var.webhook_secret
+}
