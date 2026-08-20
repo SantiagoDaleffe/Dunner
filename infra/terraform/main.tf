@@ -55,6 +55,27 @@ resource "railway_variable" "qstash_url" {
   value          = var.qstash_url
 }
 
+resource "railway_variable" "supabase_url" {
+  service_id     = railway_service.egida_api.id
+  environment_id = railway_project.egida_project.default_environment.id
+  name           = "SUPABASE_URL"
+  value          = var.supabase_url
+}
+
+resource "railway_variable" "supabase_jwt_secret" {
+  service_id     = railway_service.egida_api.id
+  environment_id = railway_project.egida_project.default_environment.id
+  name           = "SUPABASE_JWT_SECRET"
+  value          = var.supabase_jwt_secret
+}
+
+resource "railway_variable" "api_key" {
+  service_id     = railway_service.egida_api.id
+  environment_id = railway_project.egida_project.default_environment.id
+  name           = "API_KEY"
+  value          = var.api_key
+}
+
 # Public URL for the service
 resource "railway_variable" "public_api_url" {
   service_id     = railway_service.egida_api.id

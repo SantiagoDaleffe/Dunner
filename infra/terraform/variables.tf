@@ -60,3 +60,22 @@ variable "stripe_webhook_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "supabase_url" {
+  type = string
+}
+
+variable "supabase_jwt_secret" {
+  type      = string
+  sensitive = true
+}
+
+variable "api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "webhook_secret" {
+  type      = string
+  sensitive = true
+}
